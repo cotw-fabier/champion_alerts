@@ -14,10 +14,18 @@ class AlertChannelRules {
   /// When a new alert is added and the limit is exceeded, the oldest alert is removed.
   final int? alertLimit;
 
+  /// If true, adding an alert to this channel will trigger the global overlay listener.
+  final bool triggerOverlay;
+
+  /// A flag you can use in your UI to determine if the overlay should be dismissable.
+  final bool isOverlayDismissable;
+
   const AlertChannelRules({
     required this.channelId,
     this.autoClear = false,
     this.clearTimer,
     this.alertLimit,
+    this.triggerOverlay = false,
+    this.isOverlayDismissable = true,
   });
 }

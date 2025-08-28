@@ -3,8 +3,9 @@ library;
 // Core controller
 export 'src/alert_controller.dart';
 
-// Helper for easy alert creation
+// Helpers
 export 'src/helpers/generate_alert.dart';
+export 'src/helpers/alert_overlay_listener.dart'; // <-- Add this export
 
 // Data models
 export 'src/models/alert.dart';
