@@ -13,7 +13,9 @@ class AlertController extends ChangeNotifier {
   // --- State ---
   final List<Alert> _alerts = [];
   Map<String, AlertChannelRules> _rules = {};
-  void Function(Alert alert)? _onAlertAddedCallback;
+
+  // Changed from single callback to list of callbacks
+  final List<void Function(Alert alert)> _onAlertAddedCallbacks = [];
 
   /// A read-only list of all current alerts, sorted with the newest first.
   List<Alert> get allAlerts => List.unmodifiable(_alerts);
@@ -26,8 +28,15 @@ class AlertController extends ChangeNotifier {
 
   /// Registers a global callback that fires when an alert is added to a channel
   /// marked with `triggerOverlay: true`.
-  void onAlertAdded(void Function(Alert alert) callback) {
-    _onAlertAddedCallback = callback;
+  ///
+  /// Returns a function that can be called to remove this specific callback.
+  VoidCallback onAlertAdded(void Function(Alert alert) callback) {
+    _onAlertAddedCallbacks.add(callback);
+
+    // Return a dispose function for this specific callback
+    return () {
+      _onAlertAddedCallbacks.remove(callback);
+    };
   }
 
   // --- Private Helper for Hierarchical Rule Lookup ---
@@ -55,7 +64,7 @@ class AlertController extends ChangeNotifier {
 
   /// Adds a new alert and notifies listeners.
   void add(Alert alert) {
-    // UPDATED: Use the new hierarchical rule lookup.
+    // Use the hierarchical rule lookup.
     final rule = _findMostSpecificRule(alert.channel);
 
     // Insert at the beginning to keep the list sorted by newest first.
@@ -77,9 +86,20 @@ class AlertController extends ChangeNotifier {
       Timer(rule!.clearTimer!, () => remove(alert.id));
     }
 
-    // 3. Trigger the global "on alert added" callback for overlays
-    if (rule?.triggerOverlay == true && _onAlertAddedCallback != null) {
-      _onAlertAddedCallback!(alert);
+    // 3. Trigger all registered "on alert added" callbacks for overlays
+    if (rule?.triggerOverlay == true) {
+      // Create a copy of the list to avoid concurrent modification issues
+      final callbacks = List<void Function(Alert alert)>.from(
+        _onAlertAddedCallbacks,
+      );
+      for (final callback in callbacks) {
+        try {
+          callback(alert);
+        } catch (e) {
+          // Log the error but don't let one failing callback break others
+          print('Error in alert callback: $e');
+        }
+      }
     }
 
     notifyListeners();
@@ -114,7 +134,11 @@ class AlertController extends ChangeNotifier {
 
   /// Retrieves the most specific rule for a given channel, if one exists.
   AlertChannelRules? getRuleForChannel(String channel) {
-    // UPDATED: Use the new hierarchical rule lookup.
     return _findMostSpecificRule(channel);
+  }
+
+  /// Removes all alert listeners. Useful for testing or cleanup.
+  void clearAllListeners() {
+    _onAlertAddedCallbacks.clear();
   }
 }
