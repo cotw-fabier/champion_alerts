@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:change_notifier/change_notifier.dart';
+import 'package:flutter/foundation.dart';
 
 import 'models/alert.dart';
 import 'models/alert_channel_rules.dart';

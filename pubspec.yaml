@@ -8,7 +8,8 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  change_notifier: ^0.28.0 #reimplementation of ChangeNotifier to split it out from Flutter Foundation.
+  flutter:
+      sdk: flutter
   uuid: ^4.5.1
   # path: ^1.8.0
 
