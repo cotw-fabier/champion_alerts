@@ -87,7 +87,8 @@ class AlertController extends ChangeNotifier {
     }
 
     // 3. Trigger all registered "on alert added" callbacks for overlays
-    if (rule?.triggerOverlay == true) {
+    // Only trigger if channel rule allows AND alert is not silent
+    if (rule?.triggerOverlay == true && !alert.silent) {
       // Create a copy of the list to avoid concurrent modification issues
       final callbacks = List<void Function(Alert alert)>.from(
         _onAlertAddedCallbacks,
